@@ -1,17 +1,17 @@
 <template>
   <div class="home">
-    <LenearAcceleration />
+    <LinearAcceleration />
   </div>
 </template>
 
 <script>
-import LenearAcceleration from '@/components/LenearAcceleration'
+import LinearAcceleration from '@/components/LinearAcceleration.vue'
 
 export default {
   name: 'Home',
 
   components: {
-    LenearAcceleration,
+    LinearAcceleration,
   },
 }
 </script>
