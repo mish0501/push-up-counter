@@ -2,7 +2,7 @@
   <v-app>
     <v-navigation-drawer v-model="drawer" app>
       <v-list dense>
-        <v-list-item link :to="{ name: 'home' }">
+        <v-list-item link :to="{ name: 'home' }" exact>
           <v-list-item-action>
             <v-icon>home</v-icon>
           </v-list-item-action>
