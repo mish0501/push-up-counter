@@ -1,9 +1,21 @@
 <template>
   <div class="home">
-    <v-expansion-panels multiple :value="expand" tile>
+    <v-card v-if="state === 'workoutDone'">
+      <v-card-title class="display-1">Workout done!</v-card-title>
+
+      <v-card-text class="title">Total push-ups: {{ endWorkout }}</v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <SaveData :smoothData="smoothData" :sensorData="sensorData" />
+        <v-btn text color="warning" @click="reset">Reset</v-btn>
+      </v-card-actions>
+    </v-card>
+
+    <v-expansion-panels multiple :value="expand" tile v-else>
       <v-expansion-panel :disabled="sensorState == 'start'">
         <v-expansion-panel-header>
-          Total push-ups calculator
+          Workout settings
         </v-expansion-panel-header>
 
         <v-expansion-panel-content color="grey lighten-4">
@@ -33,10 +45,29 @@
               ></v-text-field>
             </v-col>
 
-            <v-col cols="12" sm="6" class="text-center">
+            <v-col cols="12" sm="8" class="text-center">
               <v-btn block color="info" @click="total = reps * sets"
                 >Calculate total</v-btn
               >
+            </v-col>
+          </v-row>
+
+          <v-divider class="my-4" />
+
+          <v-row justify="center">
+            <v-col cols="12" class="text-center">
+              <span class="display-1 font-weight-medium">
+                Rest time:
+              </span>
+            </v-col>
+            <v-col cols="12" sm="8">
+              <v-time-picker
+                v-model="picker"
+                use-seconds
+                format="24hr"
+                color="green"
+                full-width
+              />
             </v-col>
           </v-row>
         </v-expansion-panel-content>
@@ -47,7 +78,13 @@
         <v-expansion-panel-content>
           <v-row justify="center">
             <v-col cols="12" sm="3" class="text-center">
-              <v-btn block color="success" @click="start">Start</v-btn>
+              <v-btn
+                block
+                color="success"
+                @click="start"
+                :disabled="state !== 'pushup' || picker === null"
+                >Start</v-btn
+              >
             </v-col>
             <v-col cols="6" sm="3" class="text-center">
               <v-btn block color="error" @click="sensorState = 'stop'"
@@ -55,9 +92,22 @@
               >
             </v-col>
             <v-col cols="6" sm="3" class="text-center">
-              <v-btn block color="warning" @click="sensorState = 'reset'"
-                >Reset</v-btn
+              <v-btn block color="warning" @click="reset">Reset</v-btn>
+            </v-col>
+          </v-row>
+
+          <v-row v-if="state === 'rest'">
+            <v-col cols="12" class="text-center">
+              <vac
+                :end-time="new Date().getTime() + restTime"
+                @finish="restDone"
               >
+                <template v-slot:process="{ timeObj }">
+                  <span class="display-1 font-weight-medium">
+                    {{ ` ${timeObj.m}:${timeObj.s}` }}
+                  </span>
+                </template>
+              </vac>
             </v-col>
           </v-row>
 
@@ -69,17 +119,17 @@
             :totalDone="totalDone || endWorkout"
             @setDone="setDone"
             @workoutDone="workoutDone"
+            v-else-if="state === 'pushup'"
           />
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>
-
-    {{ sensorState }} {{ setsDone }} {{ totalDone }}
   </div>
 </template>
 
 <script>
 import PushUpCounter from '@/components/PushUpCounter.vue'
+import SaveData from '@/components/SaveData.vue'
 
 export default {
   name: 'Home',
@@ -87,6 +137,8 @@ export default {
   data: () => ({
     count: 0,
     sensorState: '',
+
+    state: 'pushup',
 
     reps: null,
     sets: null,
@@ -100,10 +152,35 @@ export default {
     expand: [0, 1],
 
     smoothData: [],
+    sensorData: [],
+
+    picker: null,
+
+    headers: {
+      x: 'X',
+      y: 'Y',
+      z: 'Z',
+      vector: 'Vector',
+      sx: 'X Smooth',
+      sy: 'Y Smooth',
+      sz: 'Z Smooth',
+      svector: 'Vector Smooth',
+    },
   }),
 
   components: {
     PushUpCounter,
+    SaveData,
+  },
+
+  computed: {
+    restTime() {
+      if (this.picker) {
+        let time = this.picker.split(':')
+        return time[0] * 3600000 + time[1] * 60000 + time[2] * 1000
+      }
+      return null
+    },
   },
 
   watch: {
@@ -145,48 +222,42 @@ export default {
   },
 
   methods: {
-    setDone({ smoothData }) {
+    setDone({ smoothData, sensorData }) {
       this.setsDone += 1
       this.totalDone += this.count
       this.count = 0
       this.sensorState = 'reset'
+      this.state = 'rest'
       this.smoothData = [...this.smoothData, ...smoothData]
+      this.sensorData = [...this.sensorData, ...sensorData]
 
       this.vibrate('set')
     },
 
-    workoutDone({ smoothData }) {
-      this.endWorkout = this.totalDone + this.count
+    workoutDone({ smoothData, sensorData }) {
+      let endWorkout = this.totalDone + this.count
 
-      this.reps = null
-      this.sets = null
-      this.total = null
+      smoothData = [...this.smoothData, ...smoothData]
+      sensorData = [...this.sensorData, ...sensorData]
 
-      this.setsDone = 0
-      this.totalDone = 0
-      this.count = 0
+      this.reset()
 
-      this.expand = [0, 1]
+      this.endWorkout = endWorkout
+      this.smoothData = smoothData
+      this.sensorData = sensorData
 
-      this.sensorState = 'stop'
-
-      this.smoothData = [...this.smoothData, ...smoothData]
+      this.state = 'workoutDone'
 
       this.vibrate('total')
-      console.log(JSON.stringify(this.smoothData))
     },
 
     vibrate(type) {
       if ('vibrate' in navigator) {
         if (type == 'set') {
-          console.log('200')
-
           window.navigator.vibrate([200, 100, 300])
         }
 
         if (type == 'total') {
-          console.log('300')
-
           window.navigator.vibrate([300, 100, 300])
         }
       }
@@ -198,6 +269,25 @@ export default {
 
         this.sensorState = 'start'
       }, 5000)
+    },
+
+    reset() {
+      this.count = 0
+
+      this.state = 'pushup'
+
+      this.reps = this.sets = this.total = this.picker = null
+
+      this.sensorData = this.smoothData = []
+
+      this.setsDone = this.totalDone = this.endWorkout = 0
+
+      this.sensorState = 'reset'
+    },
+
+    restDone() {
+      window.navigator.vibrate([300, 100, 300, 100, 300])
+      this.state = 'pushup'
     },
   },
 }

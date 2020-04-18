@@ -1,8 +1,12 @@
 <template>
   <div>
-    <v-row class="text-center display-1">
-      <v-col cols="6">Count: {{ count }}</v-col>
-      <v-col cols="6">Totoal: {{ totalDone }}</v-col>
+    <v-row class="text-center">
+      <v-col cols="12"
+        ><span class="display-2">Count: {{ count }}</span></v-col
+      >
+      <v-col cols="12"
+        ><span class="title">Total: {{ totalDone }}</span></v-col
+      >
     </v-row>
   </div>
 </template>
@@ -20,6 +24,7 @@ export default {
     state: 'standing',
 
     minMaxDiff: 0,
+    margin: 0.8,
   }),
 
   props: {
@@ -43,11 +48,6 @@ export default {
       type: Number,
       required: true,
     },
-  },
-
-  model: {
-    prop: 'count',
-    event: 'countChanged',
   },
 
   mounted() {
@@ -83,9 +83,8 @@ export default {
       if (newVal != 0) {
         if (newVal + this.totalDone == this.total) {
           this.$emit('workoutDone', {
-            smoothData: this.smoothData.map(({ x, y, z }) =>
-              this.round(Math.hypot(x, y, z), 3),
-            ),
+            smoothData: this.smoothData,
+            sensorData: this.sensorData,
           })
 
           return
@@ -93,9 +92,8 @@ export default {
 
         if (newVal == this.reps) {
           this.$emit('setDone', {
-            smoothData: this.smoothData.map(({ x, y, z }) =>
-              this.round(Math.hypot(x, y, z), 3),
-            ),
+            smoothData: this.smoothData,
+            sensorData: this.sensorData,
           })
 
           return
@@ -151,6 +149,14 @@ export default {
           y = this.exponentialFilter(y, prevY, alpha)
 
           z = this.exponentialFilter(z, prevZ, alpha)
+
+          if (i == 0) {
+            let prevSmooth = this.smoothData[this.smoothData.length - 1]
+
+            prevX = prevSmooth.x
+            prevY = prevSmooth.y
+            prevZ = prevSmooth.z
+          }
         }
 
         this.smoothData.push({
@@ -158,19 +164,35 @@ export default {
           y: this.round(y, 3),
           z: this.round(z, 3),
         })
+
+        return
       }
+
+      this.smoothData.push({
+        x: this.round(sensorData[len - 1].x, 3),
+        y: this.round(sensorData[len - 1].y, 3),
+        z: this.round(sensorData[len - 1].z, 3),
+      })
     },
 
     checkForPushUp() {
       if (this.vector) {
         let diff = this.round(this.vector - 9.8, 3)
 
-        if (this.state == 'falling' && diff <= 1.5 && diff > this.minMaxDiff) {
+        if (
+          this.state == 'falling' &&
+          diff <= this.margin &&
+          diff > this.minMaxDiff
+        ) {
           this.state = 'standing'
           this.$emit('update:count', this.count + 1)
         }
 
-        if (this.state == 'standing' && diff >= 1.5 && diff < this.minMaxDiff) {
+        if (
+          this.state == 'standing' &&
+          diff >= this.margin &&
+          diff < this.minMaxDiff
+        ) {
           this.state = 'falling'
         }
 

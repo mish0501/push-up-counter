@@ -14,7 +14,7 @@ module.exports = {
     'no-console': [
       process.env.NODE_ENV === 'production' ? 'error' : 'off',
       {
-        allow: ['log'],
+        allow: ['log', 'clear'],
       },
     ],
     'arrow-parens': ['error', 'as-needed'],
