@@ -45,7 +45,7 @@
               ></v-text-field>
             </v-col>
 
-            <v-col cols="12" sm="8" class="text-center">
+            <v-col cols="12" sm="8" md="4" lg="3" xl="2" class="text-center">
               <v-btn block color="info" @click="total = reps * sets"
                 >Calculate total</v-btn
               >
@@ -60,7 +60,7 @@
                 Rest time:
               </span>
             </v-col>
-            <v-col cols="12" sm="8">
+            <v-col cols="12" sm="8" md="4" lg="3" xl="2">
               <v-time-picker
                 v-model="picker"
                 use-seconds
@@ -77,7 +77,7 @@
         <v-expansion-panel-header>Counter</v-expansion-panel-header>
         <v-expansion-panel-content>
           <v-row justify="center">
-            <v-col cols="12" sm="3" class="text-center">
+            <v-col cols="12" sm="8" md="4" xl="2" class="text-center">
               <v-btn
                 block
                 color="success"
@@ -86,12 +86,14 @@
                 >Start</v-btn
               >
             </v-col>
-            <v-col cols="6" sm="3" class="text-center">
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="6" sm="4" md="2" xl="1" class="text-center">
               <v-btn block color="error" @click="sensorState = 'stop'"
                 >Stop</v-btn
               >
             </v-col>
-            <v-col cols="6" sm="3" class="text-center">
+            <v-col cols="6" sm="4" md="2" xl="1" class="text-center">
               <v-btn block color="warning" @click="reset">Reset</v-btn>
             </v-col>
           </v-row>
