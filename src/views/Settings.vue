@@ -1,64 +1,77 @@
 <template>
-  <v-card>
-    <v-card-title color="grey lighten-3">Settings</v-card-title>
-    <v-card-text>
-      <v-row justify="center">
-        <v-col cols="6">
-          <v-text-field
-            type="number"
-            label="Number of reps"
-            hint="10, 15, 20, ..."
-            v-model="reps"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="6">
-          <v-text-field
-            type="number"
-            label="Number of sets"
-            hint="1, 2, 3, ..."
-            v-model="sets"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12">
-          <v-text-field
-            type="number"
-            label="Total push-ups"
-            hint="20, 30, 50, 100, ..."
-            v-model="total"
-          ></v-text-field>
-        </v-col>
+  <div>
+    <v-card>
+      <v-card-title color="grey lighten-3">Settings</v-card-title>
+      <v-card-text>
+        <v-row justify="center">
+          <v-col cols="6">
+            <v-text-field
+              type="number"
+              label="Number of reps"
+              hint="10, 15, 20, ..."
+              v-model="reps"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="6">
+            <v-text-field
+              type="number"
+              label="Number of sets"
+              hint="1, 2, 3, ..."
+              v-model="sets"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12">
+            <v-text-field
+              type="number"
+              label="Total push-ups"
+              hint="20, 30, 50, 100, ..."
+              v-model="total"
+            ></v-text-field>
+          </v-col>
 
-        <v-col cols="12" sm="8" md="4" lg="3" xl="2" class="text-center">
-          <v-btn block color="info" @click="total = reps * sets"
-            >Calculate total</v-btn
-          >
-        </v-col>
-      </v-row>
+          <v-col cols="12" sm="8" md="4" lg="3" xl="2" class="text-center">
+            <v-btn block color="info" @click="total = reps * sets"
+              >Calculate total</v-btn
+            >
+          </v-col>
+        </v-row>
 
-      <v-divider class="my-4" />
+        <v-divider class="my-4" />
 
-      <v-row justify="center">
-        <v-col cols="12" class="text-center">
-          <span class="display-1 font-weight-medium">
-            Rest time:
-          </span>
-        </v-col>
-        <v-col cols="12" sm="8" md="4" lg="3" xl="2">
-          <v-time-picker
-            v-model="timer"
-            use-seconds
-            format="24hr"
-            color="green"
-            full-width
-            ref="timePicker"
-          />
-        </v-col>
-      </v-row>
-    </v-card-text>
-    <v-card-actions>
-      <v-btn color="success" block @click="saveSettings">Save</v-btn>
-    </v-card-actions>
-  </v-card>
+        <v-row justify="center">
+          <v-col cols="12" class="text-center">
+            <span class="display-1 font-weight-medium">
+              Rest time:
+            </span>
+          </v-col>
+          <v-col cols="12" sm="8" md="4" lg="3" xl="2">
+            <v-time-picker
+              v-model="timer"
+              use-seconds
+              format="24hr"
+              color="green"
+              full-width
+              ref="timePicker"
+            />
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="success" block @click="saveSettings">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+
+    <v-card v-if="!notificationsEnabled && notificationsSupported" class="mt-4">
+      <v-card-title>Notifications</v-card-title>
+      <v-card-text>
+        Enable notifications to see when the timer is done, even if the phone is
+        locked.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn text color="success" @click="enableNotification">Enable</v-btn>
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <script>
@@ -71,6 +84,8 @@ export default {
     total: null,
 
     timer: null,
+
+    notificationsEnabled: false,
   }),
 
   mounted() {
@@ -82,6 +97,14 @@ export default {
 
     this.$refs.timePicker.inputHour = 0
     this.$refs.timePicker.selecting = 2
+
+    if (Notification.permission === 'granted') this.notificationsEnabled = true
+  },
+
+  computed: {
+    notificationsSupported() {
+      return 'Notification' in window
+    },
   },
 
   watch: {
@@ -134,6 +157,12 @@ export default {
       )
 
       localStorage.setItem('settings', JSON.stringify(settings))
+    },
+
+    enableNotification() {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') this.notificationsEnabled = true
+      })
     },
   },
 }

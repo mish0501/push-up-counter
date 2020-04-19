@@ -70,7 +70,7 @@ import PushUpCounter from '@/components/PushUpCounter.vue'
 import SaveData from '@/components/SaveData.vue'
 
 export default {
-  name: 'Home',
+  name: 'Counter',
 
   data: () => ({
     count: 0,
@@ -172,7 +172,26 @@ export default {
     },
 
     restDone() {
-      window.navigator.vibrate([300, 100, 300, 100, 300])
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(function(registration) {
+            // eslint-disable-next-line
+            let icon = `${process.env.BASE_URL}/img/icons/android-chrome-192x192.png`
+
+            let notification = registration.showNotification("Time's up!", {
+              body: 'Time for the next set.',
+              icon,
+              badge: `${process.env.BASE_URL}/img/icons/badge.png`,
+              vibrate: [300, 100, 300, 100, 300],
+              tag: 'times-up',
+            })
+            notification.addEventListener('onclose')
+          })
+        }
+      } else {
+        window.navigator.vibrate([300, 100, 300, 100, 300])
+      }
+
       this.state = 'pushup'
     },
   },
