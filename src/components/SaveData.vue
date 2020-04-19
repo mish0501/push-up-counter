@@ -6,6 +6,19 @@
 export default {
   name: 'SaveData',
 
+  data: () => ({
+    headers: {
+      x: 'X',
+      y: 'Y',
+      z: 'Z',
+      vector: 'Vector',
+      sx: 'X Smooth',
+      sy: 'Y Smooth',
+      sz: 'Z Smooth',
+      svector: 'Vector Smooth',
+    },
+  }),
+
   props: {
     sensorData: {
       type: Array,

@@ -1,12 +1,15 @@
 <template>
   <div>
     <v-row class="text-center">
-      <v-col cols="12"
-        ><span class="display-2">Count: {{ count }}</span></v-col
-      >
-      <v-col cols="12"
-        ><span class="title">Total: {{ totalDone }}</span></v-col
-      >
+      <v-col cols="12">
+        <span class="display-2">Count: {{ count }}</span>
+      </v-col>
+      <v-col cols="6">
+        <span class="title">Total: {{ totalDone }}</span>
+      </v-col>
+      <v-col cols="6">
+        <span class="title">Sets done: {{ setsDone }}</span>
+      </v-col>
     </v-row>
   </div>
 </template>
@@ -45,6 +48,10 @@ export default {
       required: true,
     },
     totalDone: {
+      type: Number,
+      required: true,
+    },
+    setsDone: {
       type: Number,
       required: true,
     },

@@ -3,14 +3,30 @@ module.exports = {
     https: true,
   },
 
-  transpileDependencies: ['vuetify'],
+  chainWebpack: config => {
+    config.plugin('html').tap(args => {
+      args[0].title = 'Push-up counter'
+      return args
+    })
+  },
+
   publicPath: process.env.NODE_ENV === 'production' ? '/push-up-counter/' : '/',
 
+  transpileDependencies: ['vuetify'],
   pwa: {
     workboxPluginMode: 'InjectManifest',
     workboxOptions: {
       swSrc: './src/sw.js',
       swDest: 'service-worker.js',
     },
+    name: 'Push-up counter',
+    themeColor: '#4CAF50',
+    msTileColor: '#4CAF50',
+    manifestOptions: {
+      background_color: '#4CAF50',
+      short_name: 'Counter',
+    },
   },
+
+  productionSourceMap: false,
 }
