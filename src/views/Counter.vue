@@ -1,7 +1,9 @@
 <template>
   <div class="home">
     <v-card v-if="state === 'workoutDone'">
-      <v-card-title class="display-1">Workout done!</v-card-title>
+      <v-card-title class="display-1">
+        Workout done!
+      </v-card-title>
 
       <v-card-text class="title">Total push-ups: {{ totalDone }}</v-card-text>
 
@@ -13,7 +15,21 @@
     </v-card>
 
     <v-card v-else>
-      <v-card-title>Counter</v-card-title>
+      <v-card-title>
+        Counter
+
+        <v-spacer />
+
+        <v-dialog v-model="toggleSettings" scrollable>
+          <template v-slot:activator="{ on }">
+            <v-btn icon v-on="on">
+              <v-icon>settings</v-icon>
+            </v-btn>
+          </template>
+
+          <Settings @settingsSaved="toggleSettings = !toggleSettings" />
+        </v-dialog>
+      </v-card-title>
       <v-card-text>
         <v-row justify="center">
           <v-col cols="12" sm="8" md="4" xl="2" class="text-center">
@@ -58,7 +74,6 @@
           :setsDone="setsDone"
           @setDone="setDone"
           @workoutDone="workoutDone"
-          v-else-if="state === 'pushup'"
         />
       </v-card-text>
     </v-card>
@@ -68,6 +83,7 @@
 <script>
 import PushUpCounter from '@/components/PushUpCounter.vue'
 import SaveData from '@/components/SaveData.vue'
+import Settings from '@/components/Settings.vue'
 
 export default {
   name: 'Counter',
@@ -85,11 +101,14 @@ export default {
     sensorData: [],
 
     settings: {},
+
+    toggleSettings: false,
   }),
 
   components: {
     PushUpCounter,
     SaveData,
+    Settings,
   },
 
   mounted() {
