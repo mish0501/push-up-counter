@@ -174,18 +174,18 @@ export default {
     restDone() {
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
-          navigator.serviceWorker.ready.then(function(registration) {
-            // eslint-disable-next-line
-            let icon = `${process.env.BASE_URL}/img/icons/android-chrome-192x192.png`
+          let url = location.href
 
-            let notification = registration.showNotification("Time's up!", {
+          navigator.serviceWorker.ready.then(function(registration) {
+            registration.showNotification("Time's up!", {
               body: 'Time for the next set.',
-              icon,
-              badge: `${process.env.BASE_URL}/img/icons/badge.png`,
-              vibrate: [300, 100, 300, 100, 300],
-              tag: 'times-up',
+              icon: `${url}img/icons/android-chrome-192x192.png`,
+              badge: `${url}img/icons/badge.png`,
+              vibrate: [300, 50, 300, 50, 300],
+              data: {
+                url,
+              },
             })
-            notification.addEventListener('onclose')
           })
         }
       } else {

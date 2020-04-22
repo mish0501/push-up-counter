@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer v-model="drawer" app>
-      <v-list dense>
+      <v-list>
         <v-list-item link :to="{ name: 'counter' }" exact>
           <v-list-item-action>
             <v-icon>timer</v-icon>
