@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" app>
+    <!-- <v-navigation-drawer v-model="drawer" app>
       <v-list>
         <v-list-item link :to="{ name: 'counter' }" exact>
           <v-list-item-action>
@@ -19,10 +19,10 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
 
     <v-app-bar app color="green" dark>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      <!-- <v-app-bar-nav-icon @click.stop="drawer = !drawer" /> -->
       <v-toolbar-title>Push-up counter</v-toolbar-title>
     </v-app-bar>
 

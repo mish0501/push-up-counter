@@ -4,12 +4,6 @@
       <v-col cols="12">
         <span class="display-2">Count: {{ count }}</span>
       </v-col>
-      <v-col cols="6">
-        <span class="title">Total: {{ totalDone }}</span>
-      </v-col>
-      <v-col cols="6">
-        <span class="title">Sets done: {{ setsDone }}</span>
-      </v-col>
     </v-row>
   </div>
 </template>
@@ -19,6 +13,8 @@ export default {
 
   data: () => ({
     sensor: null,
+
+    count: 0,
 
     sensorData: [],
 
@@ -31,10 +27,6 @@ export default {
   }),
 
   props: {
-    count: {
-      type: Number,
-      default: 0,
-    },
     sensorState: {
       type: String,
       required: true,
@@ -48,10 +40,6 @@ export default {
       required: true,
     },
     totalDone: {
-      type: Number,
-      required: true,
-    },
-    setsDone: {
       type: Number,
       required: true,
     },
@@ -79,39 +67,19 @@ export default {
       }
       return null
     },
+
+    isSetDone() {
+      return this.count == this.reps
+    },
+
+    isWorkoutDone() {
+      return this.count + this.totalDone == this.total
+    },
   },
 
   watch: {
     sensorState(newVal) {
       this[newVal]()
-    },
-
-    count(newVal) {
-      if (newVal != 0) {
-        if (newVal + this.totalDone == this.total) {
-          this.$emit('workoutDone', {
-            smoothData: this.smoothData,
-            sensorData: this.sensorData,
-          })
-
-          return
-        }
-
-        if (newVal == this.reps) {
-          this.$emit('setDone', {
-            smoothData: this.smoothData,
-            sensorData: this.sensorData,
-          })
-
-          return
-        }
-
-        if ('vibrate' in navigator) {
-          console.log('150')
-
-          window.navigator.vibrate(150)
-        }
-      }
     },
   },
 
@@ -192,7 +160,8 @@ export default {
           diff > this.minMaxDiff
         ) {
           this.state = 'standing'
-          this.$emit('update:count', this.count + 1)
+
+          this.newPushUp()
         }
 
         if (
@@ -209,6 +178,40 @@ export default {
 
     exponentialFilter(curr, prev, alpha) {
       return alpha * prev + (1 - alpha) * curr
+    },
+
+    newPushUp() {
+      this.count += 1
+
+      let event = ''
+
+      console.log(this.isWorkoutDone, this.isSetDone)
+
+      if (this.isWorkoutDone) {
+        event = 'workoutDone'
+      } else if (this.isSetDone) {
+        event = 'setDone'
+      }
+
+      console.log(event)
+
+      if (event) {
+        let { smoothData, sensorData, count } = this
+
+        this.$emit(event, {
+          smoothData,
+          sensorData,
+          count,
+        })
+
+        return
+      }
+
+      if ('vibrate' in navigator) {
+        console.log('150')
+
+        window.navigator.vibrate(150)
+      }
     },
 
     round(number, precision) {

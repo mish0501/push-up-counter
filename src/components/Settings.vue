@@ -127,9 +127,9 @@ export default {
   methods: {
     saveSettings() {
       let settings = {
-        reps: this.reps,
-        sets: this.sets,
-        total: this.total,
+        reps: parseInt(this.reps, 10),
+        sets: parseInt(this.sets, 10),
+        total: parseInt(this.total, 10),
         timer: this.timer,
       }
 

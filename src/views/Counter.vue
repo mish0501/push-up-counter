@@ -22,37 +22,16 @@
 
         <v-dialog v-model="toggleSettings" scrollable>
           <template v-slot:activator="{ on }">
-            <v-btn icon v-on="on">
+            <v-btn icon v-on="on" v-if="state === 'pushup'">
               <v-icon>settings</v-icon>
             </v-btn>
           </template>
 
-          <Settings @settingsSaved="toggleSettings = !toggleSettings" />
+          <Settings @settingsSaved="saveSettings" />
         </v-dialog>
       </v-card-title>
+      <v-divider />
       <v-card-text>
-        <v-row justify="center">
-          <v-col cols="12" sm="8" md="4" xl="2" class="text-center">
-            <v-btn
-              block
-              color="success"
-              @click="start"
-              :disabled="state !== 'pushup' || settings.timer === null"
-              >Start</v-btn
-            >
-          </v-col>
-        </v-row>
-        <v-row justify="center">
-          <v-col cols="6" sm="4" md="2" xl="1" class="text-center">
-            <v-btn block color="error" @click="sensorState = 'stop'"
-              >Stop</v-btn
-            >
-          </v-col>
-          <v-col cols="6" sm="4" md="2" xl="1" class="text-center">
-            <v-btn block color="warning" @click="reset">Reset</v-btn>
-          </v-col>
-        </v-row>
-
         <v-row v-if="state === 'rest'">
           <v-col cols="12" class="text-center">
             <vac :end-time="new Date().getTime() + restTime" @finish="restDone">
@@ -66,16 +45,56 @@
         </v-row>
 
         <PushUpCounter
-          :count.sync="count"
           :sensorState="sensorState"
           :reps="parseInt(settings.reps, 10)"
           :total="parseInt(settings.total, 10)"
           :totalDone="totalDone"
-          :setsDone="setsDone"
           @setDone="setDone"
           @workoutDone="workoutDone"
+          v-else-if="state !== 'rest'"
         />
+
+        <v-row class="text-center">
+          <v-col cols="6">
+            <span class="title">Total: {{ totalDone }}</span>
+          </v-col>
+          <v-col cols="6">
+            <span class="title">Sets done: {{ setsDone }}</span>
+          </v-col>
+        </v-row>
       </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions>
+        <v-row dense>
+          <v-col cols="6" sm="4" lg="2" class="text-center">
+            <v-btn block color="success" @click="start" :disabled="canStart">
+              {{ state === 'paused' ? 'Continue' : 'Start' }}
+            </v-btn>
+          </v-col>
+          <v-spacer v-if="$vuetify.breakpoint.smAndUp" />
+          <v-col
+            cols="4"
+            sm="2"
+            lg="1"
+            offset="2"
+            offset-sm="0"
+            class="text-center"
+          >
+            <v-btn
+              block
+              color="info"
+              @click="pause"
+              v-if="state === 'counting'"
+            >
+              Pause
+            </v-btn>
+
+            <v-btn block color="error" @click="reset" v-else>Stop</v-btn>
+          </v-col>
+        </v-row>
+      </v-card-actions>
     </v-card>
   </div>
 </template>
@@ -89,7 +108,6 @@ export default {
   name: 'Counter',
 
   data: () => ({
-    count: 0,
     sensorState: '',
 
     state: 'pushup',
@@ -123,21 +141,20 @@ export default {
       }
       return null
     },
-  },
 
-  watch: {
-    sensorState(newVal) {
-      if (newVal === 'start') {
-        this.expand = [1]
-      }
+    canStart() {
+      return (
+        this.state === 'rest' ||
+        this.state === 'counting' ||
+        this.settings.timer === undefined
+      )
     },
   },
 
   methods: {
-    setDone({ smoothData, sensorData }) {
+    setDone({ smoothData, sensorData, count }) {
       this.setsDone += 1
-      this.totalDone += this.count
-      this.count = 0
+      this.totalDone += count
       this.sensorState = 'reset'
       this.state = 'rest'
       this.smoothData = [...this.smoothData, ...smoothData]
@@ -146,8 +163,8 @@ export default {
       this.vibrate('set')
     },
 
-    workoutDone({ smoothData, sensorData }) {
-      this.totalDone += this.count
+    workoutDone({ smoothData, sensorData, count }) {
+      this.totalDone += count
 
       this.smoothData = [...this.smoothData, ...smoothData]
       this.sensorData = [...this.sensorData, ...sensorData]
@@ -156,38 +173,6 @@ export default {
       this.sensorState = 'reset'
 
       this.vibrate('total')
-    },
-
-    vibrate(type) {
-      if ('vibrate' in navigator) {
-        if (type == 'set') {
-          window.navigator.vibrate([200, 100, 300])
-        }
-
-        if (type == 'total') {
-          window.navigator.vibrate([300, 100, 300])
-        }
-      }
-    },
-
-    start() {
-      setTimeout(() => {
-        window.navigator.vibrate(500)
-
-        this.sensorState = 'start'
-      }, 5000)
-    },
-
-    reset() {
-      this.count = 0
-
-      this.state = 'pushup'
-
-      this.sensorData = this.smoothData = []
-
-      this.setsDone = this.totalDone = this.endWorkout = 0
-
-      this.sensorState = 'reset'
     },
 
     restDone() {
@@ -212,6 +197,51 @@ export default {
       }
 
       this.state = 'pushup'
+    },
+
+    vibrate(type) {
+      if ('vibrate' in navigator) {
+        if (type == 'set') {
+          window.navigator.vibrate([200, 100, 300])
+        }
+
+        if (type == 'total') {
+          window.navigator.vibrate([300, 100, 300])
+        }
+      }
+    },
+
+    saveSettings() {
+      this.toggleSettings = !this.toggleSettings
+
+      this.settings = JSON.parse(localStorage.getItem('settings')) || {}
+    },
+
+    start() {
+      setTimeout(() => {
+        window.navigator.vibrate(500)
+
+        this.sensorState = 'start'
+        this.state = 'counting'
+      }, 5000)
+    },
+
+    reset() {
+      this.count = 0
+
+      this.state = 'pushup'
+
+      this.sensorData = this.smoothData = []
+
+      this.setsDone = this.totalDone = this.endWorkout = 0
+
+      this.sensorState = 'reset'
+    },
+
+    pause() {
+      this.sensorState = 'stop'
+
+      this.state = 'paused'
     },
   },
 }
