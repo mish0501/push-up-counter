@@ -78,11 +78,7 @@ export default {
   }),
 
   mounted() {
-    let settings = JSON.parse(localStorage.getItem('settings')) || ''
-
-    if (settings !== '') {
-      Object.assign(this.$data, settings)
-    }
+    Object.assign(this.$data, this.$store.state.settings)
 
     this.$refs.timePicker.inputHour = 0
     this.$refs.timePicker.selecting = 2
@@ -133,11 +129,7 @@ export default {
         timer: this.timer,
       }
 
-      Object.keys(settings).forEach(
-        k => !settings[k] && settings[k] !== undefined && delete settings[k],
-      )
-
-      localStorage.setItem('settings', JSON.stringify(settings))
+      this.$store.dispatch('settings/saveSettings', settings)
 
       this.$emit('settingsSaved')
     },

@@ -3,6 +3,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'SaveData',
 
@@ -19,15 +21,8 @@ export default {
     },
   }),
 
-  props: {
-    sensorData: {
-      type: Array,
-      required: true,
-    },
-    smoothData: {
-      type: Array,
-      required: true,
-    },
+  computed: {
+    ...mapState('counter', ['sensorData', 'smoothData']),
   },
 
   methods: {

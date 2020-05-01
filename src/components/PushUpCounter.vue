@@ -7,7 +7,10 @@
     </v-row>
   </div>
 </template>
+
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'PushUpCounter',
 
@@ -31,18 +34,6 @@ export default {
       type: String,
       required: true,
     },
-    reps: {
-      type: Number,
-      required: true,
-    },
-    total: {
-      type: Number,
-      required: true,
-    },
-    totalDone: {
-      type: Number,
-      required: true,
-    },
   },
 
   mounted() {
@@ -51,13 +42,19 @@ export default {
         if (result.state === 'granted') {
           this.initSensor()
         } else {
-          console.log('No permissions to use Accelerometer.')
+          this.$store.dispatch('alert/alert', {
+            type: 'error',
+            text: 'No permissions to use Accelerometer.',
+          })
         }
       })
     }
   },
 
   computed: {
+    ...mapState('settings', ['total', 'reps']),
+    ...mapState('counter', ['totalDone']),
+
     vector() {
       let len = this.smoothData.length
       if (len > 0) {
@@ -103,7 +100,10 @@ export default {
 
       sensor.onerror = event => {
         if (event.error.name == 'NotReadableError') {
-          console.log('Sensor is not available.')
+          this.$store.dispatch('alert/alert', {
+            type: 'error',
+            text: 'Sensor is not available.',
+          })
         }
       }
       this.sensor = sensor
@@ -185,15 +185,11 @@ export default {
 
       let event = ''
 
-      console.log(this.isWorkoutDone, this.isSetDone)
-
       if (this.isWorkoutDone) {
         event = 'workoutDone'
       } else if (this.isSetDone) {
         event = 'setDone'
       }
-
-      console.log(event)
 
       if (event) {
         let { smoothData, sensorData, count } = this
@@ -208,8 +204,6 @@ export default {
       }
 
       if ('vibrate' in navigator) {
-        console.log('150')
-
         window.navigator.vibrate(150)
       }
     },
@@ -240,5 +234,3 @@ export default {
   },
 }
 </script>
-
-<style></style>

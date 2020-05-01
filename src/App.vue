@@ -28,6 +28,13 @@
 
     <v-content>
       <v-container fluid>
+        <v-alert
+          :type="alert.type !== '' ? alert.type : undefined"
+          dismissible
+          v-model="alertToggle"
+        >
+          {{ alert.text }}
+        </v-alert>
         <router-view />
       </v-container>
 
@@ -46,11 +53,15 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'App',
 
   data: () => ({
     drawer: false,
+
+    alertToggle: false,
 
     refreshing: false,
     registration: null,
@@ -70,6 +81,25 @@ export default {
       window.location.reload()
     })
   },
+
+  mounted() {
+    this.$store.dispatch('settings/setSettings')
+
+    this.$store.subscribeAction({
+      after: ({ type }) => {
+        if (type === 'alert/alert') {
+          this.alertToggle = true
+        }
+      },
+    })
+  },
+
+  computed: {
+    ...mapState('alert', {
+      alert: state => state,
+    }),
+  },
+
   methods: {
     showRefreshUI(e) {
       // Display a snackbar inviting the user to refresh/reload the app due

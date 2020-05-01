@@ -9,7 +9,7 @@
 
       <v-card-actions>
         <v-spacer />
-        <SaveData :smoothData="smoothData" :sensorData="sensorData" />
+        <SaveData />
         <v-btn text color="warning" @click="reset">Reset</v-btn>
       </v-card-actions>
     </v-card>
@@ -27,7 +27,7 @@
             </v-btn>
           </template>
 
-          <Settings @settingsSaved="saveSettings" />
+          <Settings @settingsSaved="toggleSettings = !toggleSettings" />
         </v-dialog>
       </v-card-title>
       <v-divider />
@@ -46,9 +46,6 @@
 
         <PushUpCounter
           :sensorState="sensorState"
-          :reps="parseInt(settings.reps, 10)"
-          :total="parseInt(settings.total, 10)"
-          :totalDone="totalDone"
           @setDone="setDone"
           @workoutDone="workoutDone"
           v-else-if="state !== 'rest'"
@@ -104,6 +101,8 @@ import PushUpCounter from '@/components/PushUpCounter.vue'
 import SaveData from '@/components/SaveData.vue'
 import Settings from '@/components/Settings.vue'
 
+import { mapState } from 'vuex'
+
 export default {
   name: 'Counter',
 
@@ -111,14 +110,6 @@ export default {
     sensorState: '',
 
     state: 'pushup',
-
-    setsDone: 0,
-    totalDone: 0,
-
-    smoothData: [],
-    sensorData: [],
-
-    settings: {},
 
     toggleSettings: false,
   }),
@@ -129,11 +120,11 @@ export default {
     Settings,
   },
 
-  mounted() {
-    this.settings = JSON.parse(localStorage.getItem('settings')) || {}
-  },
-
   computed: {
+    ...mapState(['settings']),
+
+    ...mapState('counter', ['setsDone', 'totalDone']),
+
     restTime() {
       if (this.settings.timer) {
         let time = this.settings.timer.split(':')
@@ -152,22 +143,17 @@ export default {
   },
 
   methods: {
-    setDone({ smoothData, sensorData, count }) {
-      this.setsDone += 1
-      this.totalDone += count
+    setDone(data) {
+      this.$store.dispatch('counter/setDone', data)
+
       this.sensorState = 'reset'
       this.state = 'rest'
-      this.smoothData = [...this.smoothData, ...smoothData]
-      this.sensorData = [...this.sensorData, ...sensorData]
 
       this.vibrate('set')
     },
 
-    workoutDone({ smoothData, sensorData, count }) {
-      this.totalDone += count
-
-      this.smoothData = [...this.smoothData, ...smoothData]
-      this.sensorData = [...this.sensorData, ...sensorData]
+    workoutDone(data) {
+      this.$store.dispatch('counter/workoutDone', data)
 
       this.state = 'workoutDone'
       this.sensorState = 'reset'
@@ -209,12 +195,6 @@ export default {
           window.navigator.vibrate([300, 100, 300])
         }
       }
-    },
-
-    saveSettings() {
-      this.toggleSettings = !this.toggleSettings
-
-      this.settings = JSON.parse(localStorage.getItem('settings')) || {}
     },
 
     start() {
