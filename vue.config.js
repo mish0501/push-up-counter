@@ -1,3 +1,6 @@
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+  .BundleAnalyzerPlugin
+
 module.exports = {
   // devServer: {
   //   https: true,
@@ -8,6 +11,10 @@ module.exports = {
       args[0].title = 'Push-up counter'
       return args
     })
+  },
+
+  configureWebpack: {
+    plugins: [new BundleAnalyzerPlugin()],
   },
 
   publicPath: process.env.NODE_ENV === 'production' ? '/push-up-counter/' : '/',
